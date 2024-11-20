@@ -15,7 +15,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -99,7 +101,7 @@ public class ActividadService {
             } else if (actividadOptional.get().apuntarseActividad()) {
                 usuarioOptional.get().afegirActividad(actividadOptional.get());
                 Usuario usuario=usuarioRepository.save(usuarioOptional.get());
-                return new ResponseEntity<>("El usuario "+usuario+" se ha apuntado a la actividad correctamente",HttpStatus.OK);
+                return new ResponseEntity<>("El usuario "+usuario.getNombre()+" se ha apuntado a la actividad "+actividadOptional.get().getNombre()+ " correctamente",HttpStatus.OK);
             }else {
                 return new ResponseEntity<>("La actividad no tiene plazas disponibles",HttpStatus.NOT_ACCEPTABLE);
             }
@@ -144,19 +146,28 @@ public class ActividadService {
             log.info("estamos exportando actividades");
             Optional<Usuario> usuarioOptional=usuarioRepository.findById(usuario_id);
             if (usuarioOptional.isEmpty()){
+                log.info("No se encontro el uuuusususususususurioooooooo");
                 return new ResponseEntity<>("No se ha encontrado el usuario buscado",HttpStatus.NOT_FOUND);
             }else {
                 try{
                     List<Actividad> listado=usuarioOptional.get().getActividades();
                     ObjectMapper objectMapper=new ObjectMapper();
-//                    String jsonData=objectMapper.writeValueAsString(listado);
-//                    ByteArrayResource resource=new ByteArrayResource(jsonData.getBytes());
-//                    String filename="actividades_"+ LocalDateTime.now()+".json";
-                    File fichero=new File("actividades.json");
-                    fichero.createNewFile();
+                    List<String> listadoJson=new ArrayList<>();
+
+
+                    FileOutputStream fichero=new FileOutputStream("C:\\Users\\juanc\\Desktop\\java_ejemplo\\actividad.json");
+                    StringWriter writer=new StringWriter();
+
                     for (Actividad ele:listado) {
-                        objectMapper.writeValue(fichero,ele);
+                        objectMapper.writeValue(writer,ele);
+                        listadoJson.add(writer.toString());
                     }
+
+                    for (String ele:listadoJson) {
+                        objectMapper.writeValue(fichero,ele);
+
+                    }
+                    fichero.close();
                     return new ResponseEntity<>("El fichero se ha exportado correctamente",HttpStatus.OK);
 
                 } catch (JsonProcessingException e) {

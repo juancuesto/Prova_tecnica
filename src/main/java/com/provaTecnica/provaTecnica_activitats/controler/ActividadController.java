@@ -54,7 +54,7 @@ public class ActividadController {
         return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
     @GetMapping("/exportarActividades/{usuario_id}")
-    public ResponseEntity<?> exportarActividades(Long usuario_id){
+    public ResponseEntity<?> exportarActividades(@PathVariable Long usuario_id){
         try {
             return actividadService.exportarListadoActividades(usuario_id);
         } catch (Exception exception) {
