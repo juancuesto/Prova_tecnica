@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/appActivitats")
 public class ActividadController {
@@ -14,52 +16,83 @@ public class ActividadController {
     @Autowired
     private ActividadService actividadService;
 
-    @PostMapping("/activitat")
-    public ResponseEntity<?> crearActivitat(@RequestBody Actividad actividad) {
+    // Crear una nueva actividad
+    @PostMapping("/activitats")
+    public ResponseEntity<String> crearActividad(@RequestBody Actividad actividad) {
         try {
-            return actividadService.crearActividad(actividad);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            String mensaje = actividadService.crearActividad(actividad);
+            return ResponseEntity.status(HttpStatus.CREATED).body(mensaje);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // Consultar una actividad por ID
     @GetMapping("/activitats/{id}")
-    public ResponseEntity<?> consultarActivitaById(@PathVariable Long id) {
+    public ResponseEntity<?> consultarActividadById(@PathVariable Long id) {
         try {
-            return actividadService.consultarActividadById(id);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            Actividad actividad = actividadService.consultarActividadPorId(id);
+            if (actividad == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró una actividad con el ID especificado.");
+            }
+            return ResponseEntity.ok(actividad);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @GetMapping("/apuntarseActividad/{usuario_id}/{actividad_id}")
-    public ResponseEntity<?> apuntarseActividad(@PathVariable Long usuario_id, @PathVariable Long actividad_id) {
+    // Apuntarse a una actividad
+    @PostMapping("/activitats/apuntarse/{usuarioId}/{actividadId}")
+    public ResponseEntity<String> apuntarseActividad(@PathVariable Long usuarioId, @PathVariable Long actividadId) {
         try {
-            return actividadService.apuntarseActividad(usuario_id, actividad_id);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            String mensaje = actividadService.apuntarseActividad(usuarioId, actividadId);
+            return ResponseEntity.ok(mensaje);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @PostMapping("/importar")
-    public ResponseEntity<?> importarActividades() {
+    // Importar actividades desde una lista
+    @PostMapping("/activitats/importar")
+    public ResponseEntity<String> importarActividades(@RequestBody List<Actividad> actividades) {
         try {
-            return actividadService.cargarActividades();
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            String mensaje = actividadService.importarActividades(actividades);
+            return ResponseEntity.ok(mensaje);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    @GetMapping("/exportarActividades/{usuario_id}")
-    public ResponseEntity<?> exportarActividades(@PathVariable Long usuario_id){
+
+    // Exportar todas las actividades como una lista
+    @GetMapping("/activitats/exportar")
+    public ResponseEntity<?> exportarActividades() {
         try {
-            return actividadService.exportarListadoActividades(usuario_id);
-        } catch (Exception exception) {
-            exception.printStackTrace();
+            List<Actividad> actividades = actividadService.exportarActividades();
+            if (actividades.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No hay actividades disponibles para exportar.");
+            }
+            return ResponseEntity.ok(actividades);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @GetMapping("/activitats/listar")
+    public ResponseEntity<?> ListarActividades() {
+        try {
+            List<Actividad> actividades = actividadService.listarActividades();
+            if (actividades.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No hay actividades disponibles para exportar.");
+            }
+            return ResponseEntity.ok(actividades);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
+        }
     }
 }

@@ -7,49 +7,78 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/appActivitats")
 public class UsuarioController {
+
     @Autowired
     private UsuarioService usuarioService;
 
+    // Crear un nuevo usuario
     @PostMapping("/user")
-    public ResponseEntity<?> crearUsuari(@RequestBody Usuario usuario){
+    public ResponseEntity<?> crearUsuario(@RequestBody Usuario usuario) {
         try {
-            return usuarioService.crearUsuario(usuario);
-        }catch (Exception exception){
-            exception.printStackTrace();
+            String mensaje = usuarioService.crearUsuario(usuario);
+            return ResponseEntity.status(HttpStatus.CREATED).body(mensaje);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // Actualizar un usuario existente
     @PutMapping("/users/{id}")
-    public ResponseEntity<?> actualizarUsuario(@RequestBody Usuario usuario, @PathVariable Long id){
+    public ResponseEntity<?> actualizarUsuario(@RequestBody Usuario usuario, @PathVariable Long id) {
         try {
-            return usuarioService.actualizarUsuario(usuario,id);
-        }catch (Exception exception){
-            exception.printStackTrace();
+            String mensaje = usuarioService.actualizarUsuario(usuario, id);
+            return ResponseEntity.ok(mensaje);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // Consultar un usuario por ID
     @GetMapping("/users/{id}")
-    public ResponseEntity<?> consultarUsuarioById(@PathVariable Long id){
+    public ResponseEntity<?> consultarUsuarioById(@PathVariable Long id) {
         try {
-            return usuarioService.buscarUsuarioById(id);
-        }catch (Exception exception){
-            exception.printStackTrace();
+            Usuario usuario = usuarioService.buscarUsuarioById(id);
+            return ResponseEntity.ok(usuario);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
         }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    @DeleteMapping("/users/{id}")
-    public ResponseEntity<String> borrarUsuarioById(@PathVariable Long id){
-        try {
-            return usuarioService.deleteUsuarioById(id);
-        }catch (Exception exception){
-            exception.printStackTrace();
-        }
-        return new ResponseEntity<>("HA OCURRIDO UN ERROR INESPERADO", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    // Listar todos los usuarios
+    @GetMapping("/users")
+    public ResponseEntity<?> listarUsuarios() {
+        try {
+            List<Usuario> usuarios = usuarioService.listarUsuarios();
+            if (usuarios.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("No hay usuarios registrados.");
+            }
+            return ResponseEntity.ok(usuarios);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
+        }
+    }
+
+    // Borrar un usuario por ID
+    @DeleteMapping("/users/{id}")
+    public ResponseEntity<?> borrarUsuarioById(@PathVariable Long id) {
+        try {
+            String mensaje = usuarioService.deleteUsuarioById(id);
+            return ResponseEntity.ok(mensaje);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ha ocurrido un error inesperado.");
+        }
+    }
 }
